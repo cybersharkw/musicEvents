@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organizer {
+  id        Int      @id @default(autoincrement())
+  lastName  String?
+  firstName String?
+  email     String   @unique
+  company   String
+  street    String
+  plz       Int
+  place     String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+
+  events    musicEvent[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+
+  // Self relation for parent/child categories
+  parentId  Int?
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+
+  // Many-to-many relation with events
+  events    musicEvent[] @relation("EventCategories")
+}
+
+model musicEvent {
+  id             Int      @id @default(autoincrement())
+  titel          String
+
+  // Organizer relation
+  organizerId    Int
+  organizer      Organizer @relation(fields: [organizerId], references: [id])
+
+  // Categories (many-to-many)
+  categories     Category[] @relation("EventCategories")
+
+  // Event location
+  street         String
+  plz            Int
+  place          String
+  region         String?
+  latitude       Float?
+  longitude      Float?
+
+  // Dates
+  createdAt      DateTime @default(now())
+  eventStartDate DateTime
+  eventEndDate   DateTime
+}
+
+
